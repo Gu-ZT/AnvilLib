@@ -49,7 +49,7 @@ import net.minecraft.client.color.block.BlockColor;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -152,7 +152,7 @@ public class BlockBuilder<T extends Block, P> extends AbstractBuilder<Block, T, 
     }
 
     /**
-     * @deprecated Set your render type in your model's JSON ({@link net.neoforged.neoforge.client.model.generators.ModelBuilder#renderType(ResourceLocation)}) or override {@link net.minecraft.client.resources.model.BakedModel#getRenderTypes(BlockState, net.minecraft.util.RandomSource,  net.neoforged.neoforge.client.model.data.ModelData)}
+     * @deprecated Set your render type in your model's JSON ({@link net.neoforged.neoforge.client.model.generators.ModelBuilder#renderType(Identifier)}) or override {@link net.minecraft.client.resources.model.BakedModel#getRenderTypes(BlockState, net.minecraft.util.RandomSource,  net.neoforged.neoforge.client.model.data.ModelData)}
      */
     @Deprecated(forRemoval = true)
     public BlockBuilder<T, P> addLayer(Supplier<Supplier<RenderType>> layer) {

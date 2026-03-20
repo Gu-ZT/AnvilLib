@@ -47,10 +47,10 @@ abstract class PistonBaseBlockMixin {
     )
     private void setBlock(
         Level level, BlockPos pos, Direction facing, boolean extending, CallbackInfoReturnable<Boolean> cir,
-        @Local(ordinal = 2) BlockPos blockpos,
-        @Local(ordinal = 1) Direction direction,
-        @Local(ordinal = 1) List<BlockState> list1,
-        @Local(ordinal = 1) int k
+        @Local(name = "blockpos3") BlockPos blockpos,
+        @Local(name = "direction") Direction direction,
+        @Local(name = "list1") List<BlockState> list1,
+        @Local(name = "k") int k
     ) {
         if (level.isClientSide()) return;
         this.anvillib$nbt = new CompoundTag();

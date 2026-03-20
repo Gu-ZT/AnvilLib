@@ -5,7 +5,7 @@ import dev.anvilcraft.lib.v2.recipe.init.LibRegistries;
 import dev.anvilcraft.lib.v2.recipe.util.IPrioritized;
 import dev.anvilcraft.lib.v2.recipe.util.ISerializer;
 import dev.anvilcraft.lib.v2.recipe.util.InWorldRecipeContext;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -74,7 +74,7 @@ public interface IRecipePredicate<P extends IRecipePredicate<P>>
          *
          * @return ID
          */
-        default @Nullable ResourceLocation getId() {
+        default @Nullable Identifier getId() {
             return LibRegistries.PREDICATE_TYPE_REGISTRY.getKey(this);
         }
 

@@ -29,7 +29,7 @@ import net.minecraft.data.loot.LootTableProvider;
 import net.minecraft.data.loot.LootTableSubProvider;
 import net.minecraft.data.loot.packs.VanillaLootTableProvider;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.ValidationContext;
@@ -121,7 +121,7 @@ public class RegistrumLootTableProvider extends LootTableProvider implements Reg
         return creator;
     }
 
-    private static final BiMap<ResourceLocation, LootContextParamSet> SET_REGISTRY = ObfuscationReflectionHelper.getPrivateValue(LootContextParamSets.class, null, "REGISTRY");
+    private static final BiMap<Identifier, LootContextParamSet> SET_REGISTRY = ObfuscationReflectionHelper.getPrivateValue(LootContextParamSets.class, null, "REGISTRY");
 
     @Override
     public List<SubProviderEntry> getTables() {

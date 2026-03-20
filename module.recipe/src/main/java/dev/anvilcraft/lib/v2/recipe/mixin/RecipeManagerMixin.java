@@ -8,7 +8,7 @@ import dev.anvilcraft.lib.v2.recipe.injection.IRecipeManagerExtension;
 import dev.anvilcraft.lib.v2.recipe.InWorldRecipe;
 import dev.anvilcraft.lib.v2.recipe.util.InWorldRecipeManager;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.RecipeType;
@@ -31,7 +31,7 @@ abstract class RecipeManagerMixin implements IRecipeManagerExtension {
     private HolderLookup.Provider registries;
 
     @Shadow
-    private Map<ResourceLocation, RecipeHolder<?>> byName;
+    private Map<Identifier, RecipeHolder<?>> byName;
 
     @Shadow
     private Multimap<RecipeType<?>, RecipeHolder<?>> byType;
@@ -55,11 +55,11 @@ abstract class RecipeManagerMixin implements IRecipeManagerExtension {
 
     @Override
     public void anvillib$addRecipes(@NotNull List<RecipeHolder<InWorldRecipe>> recipes) {
-        ImmutableMap.Builder<ResourceLocation, RecipeHolder<?>> byNameBuilder = ImmutableMap.builder();
+        ImmutableMap.Builder<Identifier, RecipeHolder<?>> byNameBuilder = ImmutableMap.builder();
         Multimap<RecipeType<?>, RecipeHolder<?>> byTypeBuilder = MultimapBuilder.hashKeys().<RecipeHolder<?>>treeSetValues(
             Comparator.comparing(RecipeHolder::id)
         ).build();
-        Set<ResourceLocation> keys = new HashSet<>();
+        Set<Identifier> keys = new HashSet<>();
         this.byName.forEach((key, value) -> {
             if (key == null || value == null) return;
             if (keys.contains(key)) return;

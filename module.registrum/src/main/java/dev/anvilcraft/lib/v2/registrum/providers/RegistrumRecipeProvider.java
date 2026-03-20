@@ -47,7 +47,7 @@ import net.minecraft.data.recipes.ShapelessRecipeBuilder;
 import net.minecraft.data.recipes.SimpleCookingRecipeBuilder;
 import net.minecraft.data.recipes.SingleItemRecipeBuilder;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.item.Item;
@@ -88,7 +88,7 @@ public class RegistrumRecipeProvider extends RecipeProvider implements Registrum
     private RecipeOutput callback;
 
     @Override
-    public void accept(ResourceLocation id, Recipe<?> recipe, @org.jetbrains.annotations.Nullable AdvancementHolder advancement, ICondition... conditions) {
+    public void accept(Identifier id, Recipe<?> recipe, @org.jetbrains.annotations.Nullable AdvancementHolder advancement, ICondition... conditions) {
         if (callback == null) {
             throw new IllegalStateException("Cannot accept recipes outside of a call to registerRecipes");
         }
@@ -110,19 +110,19 @@ public class RegistrumRecipeProvider extends RecipeProvider implements Registrum
         this.callback = null;
     }
 
-    public ResourceLocation safeId(ResourceLocation id) {
-        return ResourceLocation.fromNamespaceAndPath(owner.getModid(), safeName(id));
+    public Identifier safeId(Identifier id) {
+        return Identifier.fromNamespaceAndPath(owner.getModid(), safeName(id));
     }
 
-    public ResourceLocation safeId(DataIngredient source) {
+    public Identifier safeId(DataIngredient source) {
         return safeId(source.getId());
     }
 
-    public ResourceLocation safeId(ItemLike registryEntry) {
+    public Identifier safeId(ItemLike registryEntry) {
         return safeId(BuiltInRegistries.ITEM.getKey(registryEntry.asItem()));
     }
 
-    public String safeName(ResourceLocation id) {
+    public String safeName(Identifier id) {
         return id.getPath().replace('/', '_');
     }
 
@@ -344,7 +344,7 @@ public class RegistrumRecipeProvider extends RecipeProvider implements Registrum
 
     public static void netheriteSmithing(RecipeOutput p_300886_, Item p_250046_, RecipeCategory p_248986_, Item p_250389_) { RecipeProvider.netheriteSmithing(p_300886_, p_250046_, p_248986_, p_250389_); }
 
-    public static void trimSmithing(RecipeOutput p_301332_, Item p_285461_, ResourceLocation p_285044_) { RecipeProvider.trimSmithing(p_301332_, p_285461_, p_285044_); }
+    public static void trimSmithing(RecipeOutput p_301332_, Item p_285461_, Identifier p_285044_) { RecipeProvider.trimSmithing(p_301332_, p_285461_, p_285044_); }
 
     public static void twoByTwoPacker(RecipeOutput p_301022_, RecipeCategory p_250881_, ItemLike p_252184_, ItemLike p_249710_) { RecipeProvider.twoByTwoPacker(p_301022_, p_250881_, p_252184_, p_249710_); }
 

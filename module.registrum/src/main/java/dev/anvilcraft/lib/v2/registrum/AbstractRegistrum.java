@@ -47,7 +47,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType.EntityFactory;
 import net.minecraft.world.entity.MobCategory;
@@ -137,7 +137,7 @@ public abstract class AbstractRegistrum<S extends AbstractRegistrum<S>> {
 
     @Value
     private class Registration<R, T extends R> {
-        ResourceLocation name;
+        Identifier name;
         ResourceKey<? extends Registry<R>> type;
         NonNullSupplier<? extends T> creator;
         RegistryEntry<R, T> delegate;
@@ -145,7 +145,7 @@ public abstract class AbstractRegistrum<S extends AbstractRegistrum<S>> {
         @Getter(value = AccessLevel.NONE)
         List<NonNullConsumer<? super T>> callbacks = new ArrayList<>();
 
-        Registration(ResourceLocation name, ResourceKey<? extends Registry<R>> type, NonNullSupplier<? extends T> creator, NonNullFunction<DeferredHolder<R, T>, ? extends RegistryEntry<R, T>> entryFactory) {
+        Registration(Identifier name, ResourceKey<? extends Registry<R>> type, NonNullSupplier<? extends T> creator, NonNullFunction<DeferredHolder<R, T>, ? extends RegistryEntry<R, T>> entryFactory) {
             this.name = name;
             this.type = type;
             this.creator =  creator.lazy();
@@ -619,34 +619,34 @@ public abstract class AbstractRegistrum<S extends AbstractRegistrum<S>> {
     });
 
     /**
-     * Add a custom translation mapping using the vanilla style of ResourceLocation -&gt; translation key conversion.
+     * Add a custom translation mapping using the vanilla style of Identifier -&gt; translation key conversion.
      *
      * @param type
      *            Type of the object, this is used as a prefix (e.g. {@code ["block", "mymod:myblock"] -> "block.mymod.myblock"})
      * @param id
-     *            ID of the object, which will be converted to a lang key via {@link Util#makeDescriptionId(String, ResourceLocation)}
+     *            ID of the object, which will be converted to a lang key via {@link Util#makeDescriptionId(String, Identifier)}
      * @param localizedName
      *            (English) translation value
      * @return A {@link MutableComponent} representing the translated text
      */
-    public MutableComponent addLang(String type, ResourceLocation id, String localizedName) {
+    public MutableComponent addLang(String type, Identifier id, String localizedName) {
         return addRawLang(Util.makeDescriptionId(type, id), localizedName);
     }
 
     /**
-     * Add a custom translation mapping using the vanilla style of ResourceLocation -&gt; translation key conversion. Also appends a suffix to the key.
+     * Add a custom translation mapping using the vanilla style of Identifier -&gt; translation key conversion. Also appends a suffix to the key.
      *
      * @param type
      *            Type of the object, this is used as a prefix (e.g. {@code ["block", "mymod:myblock"] -> "block.mymod.myblock"})
      * @param id
-     *            ID of the object, which will be converted to a lang key via {@link Util#makeDescriptionId(String, ResourceLocation)}
+     *            ID of the object, which will be converted to a lang key via {@link Util#makeDescriptionId(String, Identifier)}
      * @param suffix
      *            A suffix which will be appended to the generated key (separated by a dot)
      * @param localizedName
      *            (English) translation value
      * @return A {@link MutableComponent} representing the translated text
      */
-    public MutableComponent addLang(String type, ResourceLocation id, String suffix, String localizedName) {
+    public MutableComponent addLang(String type, Identifier id, String suffix, String localizedName) {
         return addRawLang(Util.makeDescriptionId(type, id) + "." + suffix, localizedName);
     }
 
@@ -895,7 +895,7 @@ public abstract class AbstractRegistrum<S extends AbstractRegistrum<S>> {
      * @return A {@link RegistryEntry} that will hold the created entry after registration is complete
      */
     protected <R, T extends R> RegistryEntry<R, T> accept(String name, ResourceKey<? extends Registry<R>> type, Builder<R, T, ?, ?> builder, NonNullSupplier<? extends T> creator, NonNullFunction<DeferredHolder<R, T>, ? extends RegistryEntry<R, T>> entryFactory) {
-        Registration<R, T> reg = new Registration<>(ResourceLocation.fromNamespaceAndPath(modid, name), type, creator, entryFactory);
+        Registration<R, T> reg = new Registration<>(Identifier.fromNamespaceAndPath(modid, name), type, creator, entryFactory);
         log.trace(DebugMarkers.REGISTER, "Captured registration for entry {}:{} of type {}", getModid(), name, type.location());
         registerCallbacks.removeAll(Pair.of(name, type)).forEach(callback -> {
             @SuppressWarnings({ "unchecked", "null" })
@@ -923,7 +923,7 @@ public abstract class AbstractRegistrum<S extends AbstractRegistrum<S>> {
      * @return A {@link ResourceKey resource key} referencing the to-be-created registry.
      */
     public <R> ResourceKey<Registry<R>> makeRegistry(String name, Function<ResourceKey<Registry<R>>, RegistryBuilder<R>> builder) {
-        final ResourceKey<Registry<R>> registryId = ResourceKey.createRegistryKey(ResourceLocation.fromNamespaceAndPath(getModid(), name));
+        final ResourceKey<Registry<R>> registryId = ResourceKey.createRegistryKey(Identifier.fromNamespaceAndPath(getModid(), name));
         OneTimeEventReceiver.addModListener(this, NewRegistryEvent.class, e -> e.register(builder.apply(registryId).create()));
         return registryId;
     }
@@ -961,7 +961,7 @@ public abstract class AbstractRegistrum<S extends AbstractRegistrum<S>> {
      * @see #makeDatapackRegistry(String, Codec)
      */
     public <R> ResourceKey<Registry<R>> makeDatapackRegistry(String name, Codec<R> codec, @Nullable Codec<R> networkCodec) {
-        final ResourceKey<Registry<R>> registryId = ResourceKey.createRegistryKey(ResourceLocation.fromNamespaceAndPath(getModid(), name));
+        final ResourceKey<Registry<R>> registryId = ResourceKey.createRegistryKey(Identifier.fromNamespaceAndPath(getModid(), name));
         OneTimeEventReceiver.addModListener(this, DataPackRegistryEvent.NewRegistry.class, event -> event.dataPackRegistry(registryId, codec, networkCodec));
         return registryId;
     }
@@ -1089,29 +1089,29 @@ public abstract class AbstractRegistrum<S extends AbstractRegistrum<S>> {
         return fluid(self(), fluidType);
     }
 
-    public FluidBuilder<BaseFlowingFluid.Flowing, S> fluid(ResourceLocation stillTexture, ResourceLocation flowingTexture) {
+    public FluidBuilder<BaseFlowingFluid.Flowing, S> fluid(Identifier stillTexture, Identifier flowingTexture) {
         return fluid(self(), stillTexture, flowingTexture);
     }
 
-    public FluidBuilder<BaseFlowingFluid.Flowing, S> fluid(ResourceLocation stillTexture, ResourceLocation flowingTexture, FluidBuilder.FluidTypeFactory typeFactory) {
+    public FluidBuilder<BaseFlowingFluid.Flowing, S> fluid(Identifier stillTexture, Identifier flowingTexture, FluidBuilder.FluidTypeFactory typeFactory) {
         return fluid(self(), stillTexture, flowingTexture, typeFactory);
     }
 
-    public FluidBuilder<BaseFlowingFluid.Flowing, S> fluid(ResourceLocation stillTexture, ResourceLocation flowingTexture, NonNullSupplier<FluidType> fluidType) {
+    public FluidBuilder<BaseFlowingFluid.Flowing, S> fluid(Identifier stillTexture, Identifier flowingTexture, NonNullSupplier<FluidType> fluidType) {
         return fluid(self(), stillTexture, flowingTexture, fluidType);
     }
 
-    public <T extends BaseFlowingFluid> FluidBuilder<T, S> fluid(ResourceLocation stillTexture, ResourceLocation flowingTexture,
+    public <T extends BaseFlowingFluid> FluidBuilder<T, S> fluid(Identifier stillTexture, Identifier flowingTexture,
             NonNullFunction<BaseFlowingFluid.Properties, T> fluidFactory) {
         return fluid(self(), stillTexture, flowingTexture, fluidFactory);
     }
 
-    public <T extends BaseFlowingFluid> FluidBuilder<T, S> fluid(ResourceLocation stillTexture, ResourceLocation flowingTexture,
+    public <T extends BaseFlowingFluid> FluidBuilder<T, S> fluid(Identifier stillTexture, Identifier flowingTexture,
         FluidBuilder.FluidTypeFactory typeFactory, NonNullFunction<BaseFlowingFluid.Properties, T> fluidFactory) {
         return fluid(self(), stillTexture, flowingTexture, typeFactory, fluidFactory);
     }
 
-    public <T extends BaseFlowingFluid> FluidBuilder<T, S> fluid(ResourceLocation stillTexture, ResourceLocation flowingTexture,
+    public <T extends BaseFlowingFluid> FluidBuilder<T, S> fluid(Identifier stillTexture, Identifier flowingTexture,
         NonNullSupplier<FluidType> fluidType, NonNullFunction<BaseFlowingFluid.Properties, T> fluidFactory) {
         return fluid(self(), stillTexture, flowingTexture, fluidType, fluidFactory);
     }
@@ -1128,29 +1128,29 @@ public abstract class AbstractRegistrum<S extends AbstractRegistrum<S>> {
         return fluid(self(), name, fluidType);
     }
 
-    public FluidBuilder<BaseFlowingFluid.Flowing, S> fluid(String name, ResourceLocation stillTexture, ResourceLocation flowingTexture) {
+    public FluidBuilder<BaseFlowingFluid.Flowing, S> fluid(String name, Identifier stillTexture, Identifier flowingTexture) {
         return fluid(self(), name, stillTexture, flowingTexture);
     }
 
-    public FluidBuilder<BaseFlowingFluid.Flowing, S> fluid(String name, ResourceLocation stillTexture, ResourceLocation flowingTexture, FluidBuilder.FluidTypeFactory typeFactory) {
+    public FluidBuilder<BaseFlowingFluid.Flowing, S> fluid(String name, Identifier stillTexture, Identifier flowingTexture, FluidBuilder.FluidTypeFactory typeFactory) {
         return fluid(self(), name, stillTexture, flowingTexture, typeFactory);
     }
 
-    public FluidBuilder<BaseFlowingFluid.Flowing, S> fluid(String name, ResourceLocation stillTexture, ResourceLocation flowingTexture, NonNullSupplier<FluidType> fluidType) {
+    public FluidBuilder<BaseFlowingFluid.Flowing, S> fluid(String name, Identifier stillTexture, Identifier flowingTexture, NonNullSupplier<FluidType> fluidType) {
         return fluid(self(), name, stillTexture, flowingTexture, fluidType);
     }
 
-    public <T extends BaseFlowingFluid> FluidBuilder<T, S> fluid(String name, ResourceLocation stillTexture, ResourceLocation flowingTexture,
+    public <T extends BaseFlowingFluid> FluidBuilder<T, S> fluid(String name, Identifier stillTexture, Identifier flowingTexture,
         NonNullFunction<BaseFlowingFluid.Properties, T> fluidFactory) {
         return fluid(self(), name, stillTexture, flowingTexture, fluidFactory);
     }
 
-    public <T extends BaseFlowingFluid> FluidBuilder<T, S> fluid(String name, ResourceLocation stillTexture, ResourceLocation flowingTexture,
+    public <T extends BaseFlowingFluid> FluidBuilder<T, S> fluid(String name, Identifier stillTexture, Identifier flowingTexture,
         FluidBuilder.FluidTypeFactory typeFactory, NonNullFunction<BaseFlowingFluid.Properties, T> fluidFactory) {
         return fluid(self(), name, stillTexture, flowingTexture, typeFactory, fluidFactory);
     }
 
-    public <T extends BaseFlowingFluid> FluidBuilder<T, S> fluid(String name, ResourceLocation stillTexture, ResourceLocation flowingTexture,
+    public <T extends BaseFlowingFluid> FluidBuilder<T, S> fluid(String name, Identifier stillTexture, Identifier flowingTexture,
         NonNullSupplier<FluidType> fluidType, NonNullFunction<BaseFlowingFluid.Properties, T> fluidFactory) {
         return fluid(self(), name, stillTexture, flowingTexture, fluidType, fluidFactory);
     }
@@ -1167,68 +1167,68 @@ public abstract class AbstractRegistrum<S extends AbstractRegistrum<S>> {
         return fluid(parent, currentName(), fluidType);
     }
 
-    public <P> FluidBuilder<BaseFlowingFluid.Flowing, P> fluid(P parent, ResourceLocation stillTexture, ResourceLocation flowingTexture) {
+    public <P> FluidBuilder<BaseFlowingFluid.Flowing, P> fluid(P parent, Identifier stillTexture, Identifier flowingTexture) {
         return fluid(parent, currentName(), stillTexture, flowingTexture);
     }
 
-    public <P> FluidBuilder<BaseFlowingFluid.Flowing, P> fluid(P parent, ResourceLocation stillTexture, ResourceLocation flowingTexture, FluidBuilder.FluidTypeFactory typeFactory) {
+    public <P> FluidBuilder<BaseFlowingFluid.Flowing, P> fluid(P parent, Identifier stillTexture, Identifier flowingTexture, FluidBuilder.FluidTypeFactory typeFactory) {
         return fluid(parent, currentName(), stillTexture, flowingTexture, typeFactory);
     }
 
-    public <P> FluidBuilder<BaseFlowingFluid.Flowing, P> fluid(P parent, ResourceLocation stillTexture, ResourceLocation flowingTexture, NonNullSupplier<FluidType> fluidType) {
+    public <P> FluidBuilder<BaseFlowingFluid.Flowing, P> fluid(P parent, Identifier stillTexture, Identifier flowingTexture, NonNullSupplier<FluidType> fluidType) {
         return fluid(parent, currentName(), stillTexture, flowingTexture, fluidType);
     }
 
-    public <T extends BaseFlowingFluid, P> FluidBuilder<T, P> fluid(P parent, ResourceLocation stillTexture, ResourceLocation flowingTexture,
+    public <T extends BaseFlowingFluid, P> FluidBuilder<T, P> fluid(P parent, Identifier stillTexture, Identifier flowingTexture,
         NonNullFunction<BaseFlowingFluid.Properties, T> fluidFactory) {
         return fluid(parent, currentName(), stillTexture, flowingTexture, fluidFactory);
     }
 
-    public <T extends BaseFlowingFluid, P> FluidBuilder<T, P> fluid(P parent, ResourceLocation stillTexture, ResourceLocation flowingTexture,
+    public <T extends BaseFlowingFluid, P> FluidBuilder<T, P> fluid(P parent, Identifier stillTexture, Identifier flowingTexture,
         FluidBuilder.FluidTypeFactory typeFactory, NonNullFunction<BaseFlowingFluid.Properties, T> fluidFactory) {
         return fluid(parent, currentName(), stillTexture, flowingTexture, typeFactory, fluidFactory);
     }
 
-    public <T extends BaseFlowingFluid, P> FluidBuilder<T, P> fluid(P parent, ResourceLocation stillTexture, ResourceLocation flowingTexture,
+    public <T extends BaseFlowingFluid, P> FluidBuilder<T, P> fluid(P parent, Identifier stillTexture, Identifier flowingTexture,
         NonNullSupplier<FluidType> fluidType, NonNullFunction<BaseFlowingFluid.Properties, T> fluidFactory) {
         return fluid(parent, currentName(), stillTexture, flowingTexture, fluidType, fluidFactory);
     }
 
     public <P> FluidBuilder<BaseFlowingFluid.Flowing, P> fluid(P parent, String name) {
-        return fluid(parent, name, ResourceLocation.fromNamespaceAndPath(getModid(), "block/" + currentName() + "_still"), ResourceLocation.fromNamespaceAndPath(getModid(), "block/" + currentName() + "_flow"));
+        return fluid(parent, name, Identifier.fromNamespaceAndPath(getModid(), "block/" + currentName() + "_still"), Identifier.fromNamespaceAndPath(getModid(), "block/" + currentName() + "_flow"));
     }
 
     public <P> FluidBuilder<BaseFlowingFluid.Flowing, P> fluid(P parent, String name, FluidBuilder.FluidTypeFactory typeFactory) {
-        return fluid(parent, name, ResourceLocation.fromNamespaceAndPath(getModid(), "block/" + currentName() + "_still"), ResourceLocation.fromNamespaceAndPath(getModid(), "block/" + currentName() + "_flow"), typeFactory);
+        return fluid(parent, name, Identifier.fromNamespaceAndPath(getModid(), "block/" + currentName() + "_still"), Identifier.fromNamespaceAndPath(getModid(), "block/" + currentName() + "_flow"), typeFactory);
     }
 
     public <P> FluidBuilder<BaseFlowingFluid.Flowing, P> fluid(P parent, String name, NonNullSupplier<FluidType> fluidType) {
-        return fluid(parent, name, ResourceLocation.fromNamespaceAndPath(getModid(), "block/" + currentName() + "_still"), ResourceLocation.fromNamespaceAndPath(getModid(), "block/" + currentName() + "_flow"), fluidType);
+        return fluid(parent, name, Identifier.fromNamespaceAndPath(getModid(), "block/" + currentName() + "_still"), Identifier.fromNamespaceAndPath(getModid(), "block/" + currentName() + "_flow"), fluidType);
     }
 
-    public <P> FluidBuilder<BaseFlowingFluid.Flowing, P> fluid(P parent, String name, ResourceLocation stillTexture, ResourceLocation flowingTexture) {
+    public <P> FluidBuilder<BaseFlowingFluid.Flowing, P> fluid(P parent, String name, Identifier stillTexture, Identifier flowingTexture) {
         return entry(name, callback -> FluidBuilder.create(this, parent, name, callback, stillTexture, flowingTexture));
     }
 
-    public <P> FluidBuilder<BaseFlowingFluid.Flowing, P> fluid(P parent, String name, ResourceLocation stillTexture, ResourceLocation flowingTexture, FluidBuilder.FluidTypeFactory typeFactory) {
+    public <P> FluidBuilder<BaseFlowingFluid.Flowing, P> fluid(P parent, String name, Identifier stillTexture, Identifier flowingTexture, FluidBuilder.FluidTypeFactory typeFactory) {
         return entry(name, callback -> FluidBuilder.create(this, parent, name, callback, stillTexture, flowingTexture, typeFactory));
     }
 
-    public <P> FluidBuilder<BaseFlowingFluid.Flowing, P> fluid(P parent, String name, ResourceLocation stillTexture, ResourceLocation flowingTexture, NonNullSupplier<FluidType> fluidType) {
+    public <P> FluidBuilder<BaseFlowingFluid.Flowing, P> fluid(P parent, String name, Identifier stillTexture, Identifier flowingTexture, NonNullSupplier<FluidType> fluidType) {
         return entry(name, callback -> FluidBuilder.create(this, parent, name, callback, stillTexture, flowingTexture, fluidType));
     }
 
-    public <T extends BaseFlowingFluid, P> FluidBuilder<T, P> fluid(P parent, String name, ResourceLocation stillTexture, ResourceLocation flowingTexture,
+    public <T extends BaseFlowingFluid, P> FluidBuilder<T, P> fluid(P parent, String name, Identifier stillTexture, Identifier flowingTexture,
         NonNullFunction<BaseFlowingFluid.Properties, T> fluidFactory) {
         return entry(name, callback -> FluidBuilder.create(this, parent, name, callback, stillTexture, flowingTexture, fluidFactory));
     }
 
-    public <T extends BaseFlowingFluid, P> FluidBuilder<T, P> fluid(P parent, String name, ResourceLocation stillTexture, ResourceLocation flowingTexture,
+    public <T extends BaseFlowingFluid, P> FluidBuilder<T, P> fluid(P parent, String name, Identifier stillTexture, Identifier flowingTexture,
         FluidBuilder.FluidTypeFactory typeFactory, NonNullFunction<BaseFlowingFluid.Properties, T> fluidFactory) {
         return entry(name, callback -> FluidBuilder.create(this, parent, name, callback, stillTexture, flowingTexture, typeFactory, fluidFactory));
     }
 
-    public <T extends BaseFlowingFluid, P> FluidBuilder<T, P> fluid(P parent, String name, ResourceLocation stillTexture, ResourceLocation flowingTexture,
+    public <T extends BaseFlowingFluid, P> FluidBuilder<T, P> fluid(P parent, String name, Identifier stillTexture, Identifier flowingTexture,
         NonNullSupplier<FluidType> fluidType, NonNullFunction<BaseFlowingFluid.Properties, T> fluidFactory) {
         return entry(name, callback -> FluidBuilder.create(this, parent, name, callback, stillTexture, flowingTexture, fluidType, fluidFactory));
     }
@@ -1298,7 +1298,7 @@ public abstract class AbstractRegistrum<S extends AbstractRegistrum<S>> {
     }
 
     public <P> NoConfigBuilder<CreativeModeTab, CreativeModeTab, P> defaultCreativeTab(P parent, String name, Consumer<CreativeModeTab.Builder> config) {
-        this.defaultCreativeModeTab = ResourceKey.create(Registries.CREATIVE_MODE_TAB, ResourceLocation.fromNamespaceAndPath(this.modid, name));
+        this.defaultCreativeModeTab = ResourceKey.create(Registries.CREATIVE_MODE_TAB, Identifier.fromNamespaceAndPath(this.modid, name));
         return this.generic(parent, name, Registries.CREATIVE_MODE_TAB, () -> {
             var builder = CreativeModeTab.builder()
                     .icon(() -> getAll(Registries.ITEM).stream().findFirst().map(ItemEntry::cast).map(ItemEntry::asStack).orElse(new ItemStack(Items.AIR)))

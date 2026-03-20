@@ -24,7 +24,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.RegistryOps;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
@@ -58,7 +58,7 @@ public abstract class CodecUtil {
     public static final Codec<Item> ITEM_CODEC = Codec.STRING.flatXmap(
         s -> {
             try {
-                Item item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(s));
+                Item item = BuiltInRegistries.ITEM.get(Identifier.parse(s));
                 if (item == Items.AIR) {
                     return DataResult.error(() -> "failed parse item key: " + s);
                 } else {
@@ -68,8 +68,8 @@ public abstract class CodecUtil {
                 return DataResult.error(e::getMessage);
             }
         }, i -> {
-            ResourceLocation key = BuiltInRegistries.ITEM.getKey(i);
-            if (key.equals(ResourceLocation.parse("air"))) {
+            Identifier key = BuiltInRegistries.ITEM.getKey(i);
+            if (key.equals(Identifier.parse("air"))) {
                 return DataResult.error(() -> "failed parse item: " + i);
             } else {
                 return DataResult.success(key.toString());
@@ -80,7 +80,7 @@ public abstract class CodecUtil {
     public static final Codec<Block> BLOCK_CODEC = Codec.STRING.flatXmap(
         s -> {
             try {
-                Block block = BuiltInRegistries.BLOCK.get(ResourceLocation.parse(s));
+                Block block = BuiltInRegistries.BLOCK.get(Identifier.parse(s));
                 if (block == Blocks.AIR) {
                     return DataResult.error(() -> "failed parse block key: " + s);
                 } else {
@@ -90,8 +90,8 @@ public abstract class CodecUtil {
                 return DataResult.error(e::getMessage);
             }
         }, b -> {
-            ResourceLocation key = BuiltInRegistries.BLOCK.getKey(b);
-            if (key.equals(ResourceLocation.parse("air"))) {
+            Identifier key = BuiltInRegistries.BLOCK.getKey(b);
+            if (key.equals(Identifier.parse("air"))) {
                 return DataResult.error(() -> "failed parse block: " + b);
             } else {
                 return DataResult.success(key.toString());
@@ -149,7 +149,7 @@ public abstract class CodecUtil {
         );
     }
 
-    public static final Codec<EntityType<?>> ENTITY_CODEC = ResourceLocation.CODEC.flatXmap(
+    public static final Codec<EntityType<?>> ENTITY_CODEC = Identifier.CODEC.flatXmap(
         id -> {
             if (!BuiltInRegistries.ENTITY_TYPE.containsKey(id)) {
                 return DataResult.error(() -> "Could not find entity type " + id + " as it does not exist in ENTITY_TYPE registry.");
@@ -157,7 +157,7 @@ public abstract class CodecUtil {
             EntityType<?> e = BuiltInRegistries.ENTITY_TYPE.get(id);
             return DataResult.success(e);
         }, b -> {
-            ResourceLocation key = BuiltInRegistries.ENTITY_TYPE.getKey(b);
+            Identifier key = BuiltInRegistries.ENTITY_TYPE.getKey(b);
             if (!BuiltInRegistries.ENTITY_TYPE.containsValue(b)) {
                 return DataResult.error(() -> "Could not find key of entity type " + key + " as it does not exist in ENTITY_TYPE registry.");
             } else {
@@ -281,20 +281,20 @@ public abstract class CodecUtil {
 
     public static final StreamCodec<RegistryFriendlyByteBuf, Item> ITEM_STREAM_CODEC = StreamCodec.of(
         (buf, item) -> buf.writeUtf(BuiltInRegistries.ITEM.getKey(item).toString()),
-        buf -> BuiltInRegistries.ITEM.get(ResourceLocation.parse(buf.readUtf()))
+        buf -> BuiltInRegistries.ITEM.get(Identifier.parse(buf.readUtf()))
     );
 
     public static final StreamCodec<RegistryFriendlyByteBuf, Block> BLOCK_STREAM_CODEC = StreamCodec.of(
         (buf, block) -> buf.writeUtf(BuiltInRegistries.BLOCK.getKey(block).toString()),
-        buf -> BuiltInRegistries.BLOCK.get(ResourceLocation.parse(buf.readUtf()))
+        buf -> BuiltInRegistries.BLOCK.get(Identifier.parse(buf.readUtf()))
     );
 
     public static final StreamCodec<? super ByteBuf, BlockState> BLOCK_STATE_STREAM_CODEC = StreamCodec.of(
         (buf, blockState) -> buf.writeInt(Block.getId(blockState)), (buf) -> Block.stateById(buf.readInt()));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, EntityType<?>> ENTITY_STREAM_CODEC = StreamCodec.of(
-        (buf, e) -> buf.writeResourceLocation(BuiltInRegistries.ENTITY_TYPE.getKey(e)),
-        buf -> BuiltInRegistries.ENTITY_TYPE.get(buf.readResourceLocation())
+        (buf, e) -> buf.writeIdentifier(BuiltInRegistries.ENTITY_TYPE.getKey(e)),
+        buf -> BuiltInRegistries.ENTITY_TYPE.get(buf.readIdentifier())
     );
 
     public static final StreamCodec<RegistryFriendlyByteBuf, Character> CHAR_STREAM_CODEC = StreamCodec.of(

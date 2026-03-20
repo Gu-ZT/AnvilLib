@@ -31,7 +31,7 @@ import lombok.RequiredArgsConstructor;
 import net.minecraft.core.Registry;
 import net.minecraft.data.tags.TagsProvider;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagEntry;
 import net.minecraft.tags.TagKey;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -129,7 +129,7 @@ public abstract class AbstractBuilder<R, T extends R, P, S extends AbstractBuild
     }
 
     protected TagEntry asTag() {
-        ResourceLocation id = ResourceLocation.fromNamespaceAndPath(getOwner().getModid(), getName());
+        Identifier id = Identifier.fromNamespaceAndPath(getOwner().getModid(), getName());
         if (isOptional) return TagEntry.optionalElement(id);
         return TagEntry.element(id);
     }

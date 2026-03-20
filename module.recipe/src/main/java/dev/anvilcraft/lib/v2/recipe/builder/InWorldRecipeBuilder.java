@@ -22,7 +22,7 @@ import net.minecraft.advancements.critereon.RecipeUnlockedTrigger;
 import net.minecraft.core.NonNullList;
 import net.minecraft.data.recipes.RecipeBuilder;
 import net.minecraft.data.recipes.RecipeOutput;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -950,7 +950,7 @@ public class InWorldRecipeBuilder<T extends InWorldRecipeBuilder<T>> implements 
     }
 
     @Override
-    public void save(RecipeOutput recipeOutput, ResourceLocation id) {
+    public void save(RecipeOutput recipeOutput, Identifier id) {
         Advancement.Builder builder = recipeOutput.advancement()
             .addCriterion("has_the_recipe", RecipeUnlockedTrigger.unlocked(id))
             .rewards(AdvancementRewards.Builder.recipe(id))
@@ -959,7 +959,7 @@ public class InWorldRecipeBuilder<T extends InWorldRecipeBuilder<T>> implements 
         this.criteria.forEach(builder::addCriterion);
         InWorldRecipe recipe = this.build();
         recipeOutput.accept(
-            ResourceLocation.fromNamespaceAndPath(id.getNamespace(), this.group + "/" + id.getPath()),
+            Identifier.fromNamespaceAndPath(id.getNamespace(), this.group + "/" + id.getPath()),
             recipe,
             builder.build(id.withPrefix("recipes/" + this.group + "/"))
         );

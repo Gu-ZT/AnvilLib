@@ -5,7 +5,7 @@ import lombok.Getter;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.RegistryOps;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
@@ -49,12 +49,12 @@ public class InWorldRecipeContext implements RecipeInput {
     /**
      * 存储配方数据的映射表
      */
-    private final Map<ResourceLocation, Object> data = new ConcurrentHashMap<>();
+    private final Map<Identifier, Object> data = new ConcurrentHashMap<>();
 
     /**
      * 存储接受者的映射表
      */
-    private final Map<ResourceLocation, Consumer<InWorldRecipeContext>> acceptors = new ConcurrentHashMap<>();
+    private final Map<Identifier, Consumer<InWorldRecipeContext>> acceptors = new ConcurrentHashMap<>();
 
     /**
      * 配方谓词堆栈
@@ -168,7 +168,7 @@ public class InWorldRecipeContext implements RecipeInput {
      * @param key      接受者键
      * @param acceptor 接受者
      */
-    public void putAcceptor(ResourceLocation key, Consumer<InWorldRecipeContext> acceptor) {
+    public void putAcceptor(Identifier key, Consumer<InWorldRecipeContext> acceptor) {
         this.acceptors.put(key, acceptor);
     }
 

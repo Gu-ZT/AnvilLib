@@ -63,12 +63,11 @@ abstract class PistonMovingBlockEntityMixin extends BlockEntity implements IPist
         BlockState state,
         PistonMovingBlockEntity blockEntity,
         CallbackInfo ci,
-        @Local(ordinal = 1) BlockState moveState
+        @Local(name = "blockstate") BlockState moveState
     ) {
         if (level.isClientSide()) return;
-        if (!(blockEntity instanceof IPistonMovingBlockEntityExtension blockEntity1)) return;
         if (!(moveState.getBlock() instanceof IMoveableEntityBlock entityBlock)) return;
-        CompoundTag tag = blockEntity1.anvillib$clearData();
+        CompoundTag tag = blockEntity.anvillib$clearData();
         if (tag != null) {
             entityBlock.setData(level, pos, tag);
         }
@@ -82,13 +81,12 @@ abstract class PistonMovingBlockEntityMixin extends BlockEntity implements IPist
         shift = At.Shift.AFTER
     )
     )
-    private void finalTick(CallbackInfo ci, @Local BlockState moveState) {
+    private void finalTick(CallbackInfo ci, @Local(name = "blockstate") BlockState moveState) {
         if (this.level == null || this.level.isClientSide()) return;
         // noinspection ConstantValue
         if (!(this instanceof IPistonMovingBlockEntityExtension blockEntity1)) return;
         if (!(moveState.getBlock() instanceof IMoveableEntityBlock entityBlock)) return;
         CompoundTag tag = blockEntity1.anvillib$clearData();
-        // noinspection ConstantValue
         if (tag != null) {
             entityBlock.setData(level, this.worldPosition, tag);
         }

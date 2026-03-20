@@ -17,7 +17,7 @@ import dev.anvilcraft.lib.v2.registrum.util.nullness.NonNullSupplier;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.PackOutput;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.ItemLike;
 import net.neoforged.fml.LogicalSide;
 import net.neoforged.neoforge.client.model.generators.ItemModelBuilder;
@@ -57,7 +57,7 @@ public class RegistrumItemModelProvider extends ItemModelProvider implements Reg
         return BuiltInRegistries.ITEM.getKey(item.get().asItem()).getPath();
     }
 
-    public ResourceLocation itemTexture(NonNullSupplier<? extends ItemLike> item) {
+    public Identifier itemTexture(NonNullSupplier<? extends ItemLike> item) {
         return modLoc("item/" + name(item));
     }
 
@@ -66,18 +66,18 @@ public class RegistrumItemModelProvider extends ItemModelProvider implements Reg
     }
 
     public ItemModelBuilder blockItem(NonNullSupplier<? extends ItemLike> block, String suffix) {
-        return withExistingParent(name(block), ResourceLocation.fromNamespaceAndPath(modid(block), "block/" + name(block) + suffix));
+        return withExistingParent(name(block), Identifier.fromNamespaceAndPath(modid(block), "block/" + name(block) + suffix));
     }
 
     public ItemModelBuilder blockWithInventoryModel(NonNullSupplier<? extends ItemLike> block) {
-        return withExistingParent(name(block), ResourceLocation.fromNamespaceAndPath(modid(block), "block/" + name(block) + "_inventory"));
+        return withExistingParent(name(block), Identifier.fromNamespaceAndPath(modid(block), "block/" + name(block) + "_inventory"));
     }
 
     public ItemModelBuilder blockSprite(NonNullSupplier<? extends ItemLike> block) {
         return blockSprite(block, modLoc("block/" + name(block)));
     }
 
-    public ItemModelBuilder blockSprite(NonNullSupplier<? extends ItemLike> block, ResourceLocation texture) {
+    public ItemModelBuilder blockSprite(NonNullSupplier<? extends ItemLike> block, Identifier texture) {
         return generated(() -> block.get().asItem(), texture);
     }
 
@@ -85,7 +85,7 @@ public class RegistrumItemModelProvider extends ItemModelProvider implements Reg
         return generated(item, itemTexture(item));
     }
 
-    public ItemModelBuilder generated(NonNullSupplier<? extends ItemLike> item, ResourceLocation... layers) {
+    public ItemModelBuilder generated(NonNullSupplier<? extends ItemLike> item, Identifier... layers) {
         ItemModelBuilder ret = getBuilder(name(item)).parent(new ModelFile.UncheckedModelFile("item/generated"));
         for (int i = 0; i < layers.length; i++) {
             ret = ret.texture("layer" + i, layers[i]);
@@ -97,7 +97,7 @@ public class RegistrumItemModelProvider extends ItemModelProvider implements Reg
         return handheld(item, itemTexture(item));
     }
 
-    public ItemModelBuilder handheld(NonNullSupplier<? extends ItemLike> item, ResourceLocation texture) {
+    public ItemModelBuilder handheld(NonNullSupplier<? extends ItemLike> item, Identifier texture) {
         return withExistingParent(name(item), "item/handheld").texture("layer0", texture);
     }
 }

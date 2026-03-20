@@ -73,16 +73,6 @@ neoForge {
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
 
-        data {
-            data()
-
-            // example of overriding the workingDirectory set in configureEach above, uncomment if you want to use it
-            // gameDirectory = project.file('run-data')
-
-            // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
-            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
-        }
-
         // applies to all the run configs above
         configureEach {
             // Recommended logging data for a userdev environment
@@ -116,19 +106,19 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
     if (System.getenv("NOT_DEV") == 'true') {
-        jarJar(implementation("dev.anvilcraft.lib:anvillib-config-neoforge-1.21.1:latest.release"))
-        jarJar(implementation("dev.anvilcraft.lib:anvillib-integration-neoforge-1.21.1:latest.release"))
-        jarJar(implementation("dev.anvilcraft.lib:anvillib-moveable-entity-block-neoforge-1.21.1:latest.release"))
-        jarJar(implementation("dev.anvilcraft.lib:anvillib-network-neoforge-1.21.1:latest.release"))
-        jarJar(implementation("dev.anvilcraft.lib:anvillib-recipe-neoforge-1.21.1:latest.release"))
-        jarJar(implementation("dev.anvilcraft.lib:anvillib-registrum-neoforge-1.21.1:latest.release"))
+        jarJar(implementation("dev.anvilcraft.lib:anvillib-config-neoforge-1.21.11:latest.release"))
+        jarJar(implementation("dev.anvilcraft.lib:anvillib-integration-neoforge-1.21.11:latest.release"))
+        jarJar(implementation("dev.anvilcraft.lib:anvillib-moveable-entity-block-neoforge-1.21.11:latest.release"))
+        jarJar(implementation("dev.anvilcraft.lib:anvillib-network-neoforge-1.21.11:latest.release"))
+        // jarJar(implementation("dev.anvilcraft.lib:anvillib-recipe-neoforge-1.21.11:latest.release"))
+        // jarJar(implementation("dev.anvilcraft.lib:anvillib-registrum-neoforge-1.21.11:latest.release"))
     } else {
-        jarJar(implementation project(":anvillib-config-neoforge-1.21.1"))
-        jarJar(implementation project(":anvillib-integration-neoforge-1.21.1"))
-        jarJar(implementation project(":anvillib-moveable-entity-block-neoforge-1.21.1"))
-        jarJar(implementation project(":anvillib-network-neoforge-1.21.1"))
-        jarJar(implementation project(":anvillib-recipe-neoforge-1.21.1"))
-        jarJar(implementation project(":anvillib-registrum-neoforge-1.21.1"))
+        jarJar(implementation project(":anvillib-config-neoforge-1.21.11"))
+        jarJar(implementation project(":anvillib-integration-neoforge-1.21.11"))
+        jarJar(implementation project(":anvillib-moveable-entity-block-neoforge-1.21.11"))
+        jarJar(implementation project(":anvillib-network-neoforge-1.21.11"))
+        // jarJar(implementation project(":anvillib-recipe-neoforge-1.21.11"))
+        // jarJar(implementation project(":anvillib-registrum-neoforge-1.21.11"))
     }
 }
 
