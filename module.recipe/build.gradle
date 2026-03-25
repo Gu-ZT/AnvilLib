@@ -116,9 +116,9 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
     if (System.getenv("NOT_DEV") == 'true') {
-        jarJar(implementation("dev.anvilcraft.lib:anvillib-config-neoforge-1.21.11:latest.release"))
+        jarJar(implementation("dev.anvilcraft.lib:anvillib-config-neoforge-26.1:latest.release"))
     } else {
-        jarJar(implementation project(":anvillib-config-neoforge-1.21.11"))
+        jarJar(implementation project(":anvillib-config-neoforge-26.1"))
     }
 }
 
@@ -271,5 +271,5 @@ machete {
 }
 
 lombok {
-    version = "1.18.34"
+    version = "1.18.44"
 }
