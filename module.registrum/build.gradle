@@ -30,7 +30,7 @@ repositories {
     mavenCentral()
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+java.toolchain.languageVersion = JavaLanguageVersion.of(java_version)
 
 neoForge {
     // Specify the version of NeoForge to use.
