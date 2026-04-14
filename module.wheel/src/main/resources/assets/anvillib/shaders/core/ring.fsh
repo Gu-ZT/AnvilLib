@@ -2,11 +2,12 @@
 
 in vec4 vertexColor;
 
-uniform vec4 ColorModulator;
-uniform vec2 Center;
-uniform float InnerDiameter;
-uniform float OuterDiameter;
-uniform float AntiAliasingRadius;
+layout (std140) uniform RingUniform {
+    vec2 Center;
+    float InnerDiameter;
+    float OuterDiameter;
+    float AntiAliasingRadius;
+};
 
 out vec4 fragColor;
 
@@ -18,5 +19,5 @@ void main() {
     color.a *= smoothstep(InnerDiameter - AntiAliasingRadius, InnerDiameter + AntiAliasingRadius, distance);
     color.a *= smoothstep(OuterDiameter + AntiAliasingRadius, OuterDiameter - AntiAliasingRadius, distance);
 
-    fragColor = color * ColorModulator;
+    fragColor = color;
 }

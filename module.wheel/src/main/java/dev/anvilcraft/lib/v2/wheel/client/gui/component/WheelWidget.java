@@ -1,6 +1,9 @@
 package dev.anvilcraft.lib.v2.wheel.client.gui.component;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
+import com.mojang.blaze3d.buffers.Std140Builder;
+import com.mojang.blaze3d.buffers.Std140SizeCalculator;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.Window;
@@ -9,7 +12,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.MeshData;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import dev.anvilcraft.lib.v2.wheel.client.init.LibRenders;
@@ -20,10 +22,17 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.renderer.DynamicUniformStorage;
 import net.minecraft.network.chat.Component;
+import org.joml.Matrix3x2fStack;
+import org.joml.Matrix3x2fc;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
+import org.joml.Vector2fc;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.OptionalDouble;
@@ -60,6 +69,70 @@ public class WheelWidget extends AbstractWidget {
     @Getter
     @Setter
     private boolean closingAnimationStarted = false;
+
+    public record RingUniform(Vector2fc center, float innerDiameter, float outerDiameter, float antiAliasingRadius)
+        implements DynamicUniformStorage.DynamicUniform {
+
+        @Override
+        public void write(ByteBuffer buffer) {
+            Std140Builder.intoBuffer(buffer)
+                .putVec2(this.center)
+                .putFloat(this.innerDiameter)
+                .putFloat(this.outerDiameter)
+                .putFloat(this.antiAliasingRadius);
+        }
+
+        public static int size() {
+            return new Std140SizeCalculator()
+                // Center
+                .putVec2()
+                // InnerDiameter
+                .putFloat()
+                // OuterDiameter
+                .putFloat()
+                // AntiAliasingRadius
+                .putFloat()
+                .get();
+        }
+    }
+
+    private static final DynamicUniformStorage<RingUniform> ringUbo = new DynamicUniformStorage<>(
+        "RingUniform UBO",
+        GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST,
+        RingUniform.size()
+    );
+
+    public record SelectionUniform(Vector2fc framebufferSize, Vector2fc center, float radius, float antiAliasingRadius)
+        implements DynamicUniformStorage.DynamicUniform {
+
+        @Override
+        public void write(ByteBuffer buffer) {
+            Std140Builder.intoBuffer(buffer)
+                .putVec2(this.framebufferSize)
+                .putVec2(this.center)
+                .putFloat(this.radius)
+                .putFloat(this.antiAliasingRadius);
+        }
+
+        public static int size() {
+            return new Std140SizeCalculator()
+                // FramebufferSize
+                .putVec2()
+                // Center
+                .putVec2()
+                // Radius
+                .putFloat()
+                // AntiAliasingRadius
+                .putFloat()
+                .get();
+        }
+    }
+
+    private static final DynamicUniformStorage<SelectionUniform> selectionUbo = new DynamicUniformStorage<>(
+        "SelectionUniform UBO",
+        GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST,
+        SelectionUniform.size()
+    );
 
     public WheelWidget(
         int x,
@@ -295,18 +368,17 @@ public class WheelWidget extends AbstractWidget {
         float innerDiameter,
         float outerDiameter
     ) {
-        PoseStack poseStack = guiGraphics.pose();
-        Matrix4f matrix4f = poseStack.last().pose();
+        Matrix3x2fStack poseStack = guiGraphics.pose();
         Tesselator tesselator = Tesselator.getInstance();
         BufferBuilder bufferBuilder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
         float x1 = centerX - outerDiameter - 5;
         float y1 = centerY - outerDiameter - 5;
         float x2 = centerX + outerDiameter + 5;
         float y2 = centerY + outerDiameter + 5;
-        bufferBuilder.addVertex(matrix4f, x1, y1, RING_Z).setColor(color);
-        bufferBuilder.addVertex(matrix4f, x1, y2, RING_Z).setColor(color);
-        bufferBuilder.addVertex(matrix4f, x2, y2, RING_Z).setColor(color);
-        bufferBuilder.addVertex(matrix4f, x2, y1, RING_Z).setColor(color);
+        bufferBuilder.addVertexWith2DPose(poseStack, x1, y1, RING_Z).setColor(color);
+        bufferBuilder.addVertexWith2DPose(poseStack, x1, y2, RING_Z).setColor(color);
+        bufferBuilder.addVertexWith2DPose(poseStack, x2, y2, RING_Z).setColor(color);
+        bufferBuilder.addVertexWith2DPose(poseStack, x2, y1, RING_Z).setColor(color);
         MeshData built = bufferBuilder.build();
         Window window = Minecraft.getInstance().getWindow();
         float guiScale = (float) window.getGuiScale();
@@ -314,45 +386,55 @@ public class WheelWidget extends AbstractWidget {
         GpuBuffer indexBuffer = sequentialBuffer.getBuffer(built.drawState().indexCount());
         GpuBuffer vertexBuffer = LibRenders.RING_PIPELINE.getVertexFormat().uploadImmediateVertexBuffer(built.vertexBuffer());
         built.close();
-
+        GpuBufferSlice writeUniform = WheelWidget.ringUbo.writeUniform(new RingUniform(
+            new Vector2f(centerX * guiScale, centerY * guiScale),
+            innerDiameter * guiScale,
+            outerDiameter * guiScale,
+            1.25f
+        ));
+        GpuBufferSlice dynamicTransforms = RenderSystem.getDynamicUniforms()
+            .writeTransform(
+                new Matrix4f().setTranslation(0.0F, 0.0F, -11000.0F),
+                new Vector4f(1.0F, 1.0F, 1.0F, 1.0F),
+                new Vector3f(),
+                new Matrix4f(),
+                0.0F
+            );
         RenderTarget mainRenderTarget = Minecraft.getInstance().getMainRenderTarget();
         RenderPass renderPass = RenderSystem.getDevice()
             .createCommandEncoder()
             .createRenderPass(
-                mainRenderTarget.getColorTexture(),
+                () -> "Anvilib Wheel Ring",
+                mainRenderTarget.getColorTextureView(),
                 OptionalInt.empty(),
-                mainRenderTarget.getDepthTexture(),
+                mainRenderTarget.getDepthTextureView(),
                 OptionalDouble.empty()
             );
         renderPass.setPipeline(LibRenders.RING_PIPELINE);
-        renderPass.setUniform("Center", centerX * guiScale, centerY * guiScale);
-        renderPass.setUniform("InnerDiameter", innerDiameter * guiScale);
-        renderPass.setUniform("OuterDiameter", outerDiameter * guiScale);
-
-        renderPass.setUniform("AntiAliasingRadius", 1.25f);
-
+        RenderSystem.bindDefaultUniforms(renderPass);
+        renderPass.setUniform("DynamicTransforms", dynamicTransforms);
+        renderPass.setUniform("RingUniform", writeUniform);
         renderPass.setIndexBuffer(indexBuffer, sequentialBuffer.type());
         renderPass.setVertexBuffer(0, vertexBuffer);
-        renderPass.drawIndexed(0, 6);
+        renderPass.drawIndexed(0, 0, 6, 1);
         renderPass.close();
+        WheelWidget.ringUbo.endFrame();
     }
 
     public static void renderSelectionEffect(GuiGraphics guiGraphics, float centerX, float centerY, int color, float radius) {
         RenderPipeline selectionPipeline = LibRenders.SELECTION_PIPELINE;
         if (selectionPipeline == null) return;
-
-        PoseStack poseStack = guiGraphics.pose();
-        Matrix4f matrix4f = poseStack.last().pose();
+        Matrix3x2fStack poseStack = guiGraphics.pose();
         Tesselator tesselator = Tesselator.getInstance();
         BufferBuilder bufferBuilder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
         float x1 = centerX - radius - 5;
         float y1 = centerY - radius - 5;
         float x2 = centerX + radius + 5;
         float y2 = centerY + radius + 5;
-        bufferBuilder.addVertex(matrix4f, x1, y1, SELECTION_Z).setColor(color);
-        bufferBuilder.addVertex(matrix4f, x1, y2, SELECTION_Z).setColor(color);
-        bufferBuilder.addVertex(matrix4f, x2, y2, SELECTION_Z).setColor(color);
-        bufferBuilder.addVertex(matrix4f, x2, y1, SELECTION_Z).setColor(color);
+        bufferBuilder.addVertexWith2DPose(poseStack, x1, y1, SELECTION_Z).setColor(color);
+        bufferBuilder.addVertexWith2DPose(poseStack, x1, y2, SELECTION_Z).setColor(color);
+        bufferBuilder.addVertexWith2DPose(poseStack, x2, y2, SELECTION_Z).setColor(color);
+        bufferBuilder.addVertexWith2DPose(poseStack, x2, y1, SELECTION_Z).setColor(color);
         MeshData built = bufferBuilder.build();
         Window window = Minecraft.getInstance().getWindow();
         float guiScale = (float) window.getGuiScale();
@@ -360,26 +442,39 @@ public class WheelWidget extends AbstractWidget {
         GpuBuffer indexBuffer = sequentialBuffer.getBuffer(built.drawState().indexCount());
         GpuBuffer vertexBuffer = selectionPipeline.getVertexFormat().uploadImmediateVertexBuffer(built.vertexBuffer());
         built.close();
-
+        GpuBufferSlice writeUniform = WheelWidget.selectionUbo.writeUniform(new SelectionUniform(
+            new Vector2f(centerX * guiScale, centerY * guiScale),
+            new Vector2f((float) window.getWidth(), (float) window.getHeight()),
+            radius * guiScale,
+            1.25f
+        ));
+        GpuBufferSlice dynamicTransforms = RenderSystem.getDynamicUniforms()
+            .writeTransform(
+                new Matrix4f().setTranslation(0.0F, 0.0F, -11000.0F),
+                new Vector4f(1.0F, 1.0F, 1.0F, 1.0F),
+                new Vector3f(),
+                new Matrix4f(),
+                0.0F
+            );
         RenderTarget mainRenderTarget = Minecraft.getInstance().getMainRenderTarget();
         RenderPass renderPass = RenderSystem.getDevice()
             .createCommandEncoder()
             .createRenderPass(
-                mainRenderTarget.getColorTexture(),
+                () -> "",
+                mainRenderTarget.getColorTextureView(),
                 OptionalInt.empty(),
-                mainRenderTarget.getDepthTexture(),
+                mainRenderTarget.getDepthTextureView(),
                 OptionalDouble.empty()
             );
         renderPass.setPipeline(selectionPipeline);
-        renderPass.setUniform("Center", centerX * guiScale, centerY * guiScale);
-        renderPass.setUniform("FramebufferSize", (float) window.getWidth(), (float) window.getHeight());
-        renderPass.setUniform("Radius", radius * guiScale);
-        renderPass.setUniform("AntiAliasingRadius", 1.25f);
-
+        RenderSystem.bindDefaultUniforms(renderPass);
+        renderPass.setUniform("DynamicTransforms", dynamicTransforms);
+        renderPass.setUniform("SelectionUniform", writeUniform);
         renderPass.setIndexBuffer(indexBuffer, sequentialBuffer.type());
         renderPass.setVertexBuffer(0, vertexBuffer);
-        renderPass.drawIndexed(0, 6);
+        renderPass.drawIndexed(0, 0, 6, 1);
         renderPass.close();
+        WheelWidget.selectionUbo.endFrame();
     }
 
     public WheelWidget setCurrentIndex(int index) {
@@ -487,7 +582,7 @@ public class WheelWidget extends AbstractWidget {
             this.animationStarted = true;
             this.displayTime = System.currentTimeMillis();
         }
-        final PoseStack poseStack = guiGraphics.pose();
+        final Matrix3x2fStack poseStack = guiGraphics.pose();
         float delta = this.displayTime + this.animationMs - System.currentTimeMillis();
         if (delta > 0) {
             float progress = 1 - (delta / this.animationMs);
@@ -508,23 +603,23 @@ public class WheelWidget extends AbstractWidget {
         for (WheelSection value : this.sections) {
             float x = value.center.x;
             float y = value.center.y;
-            poseStack.pushPose();
-            poseStack.translate(x - 10, y - 10, 100);
+            poseStack.pushMatrix();
+            poseStack.translate(x - 10, y - 10);
             value.renderer().render(guiGraphics, poseStack, 20, 20);
-            poseStack.popPose();
-            poseStack.pushPose();
+            poseStack.popMatrix();
+            poseStack.pushMatrix();
             float coordinateScale = 0.7f;
             float offsetX = 0.1f * this.width;
             float offsetY = 0.1f * this.height;
             float adjustedX = (x - offsetX) / coordinateScale;
             float adjustedY = (y - offsetY - 20 * this.textScale) / coordinateScale;
 
-            poseStack.translate(offsetX, offsetY, 0);
-            poseStack.scale(coordinateScale, coordinateScale, coordinateScale);
-            poseStack.translate(adjustedX, adjustedY, 0);
-            poseStack.scale(this.textScale / coordinateScale, this.textScale / coordinateScale, this.textScale / coordinateScale);
+            poseStack.translate(offsetX, offsetY);
+            poseStack.scale(coordinateScale, coordinateScale);
+            poseStack.translate(adjustedX, adjustedY);
+            poseStack.scale(this.textScale / coordinateScale, this.textScale / coordinateScale);
             guiGraphics.drawCenteredString(minecraft.font, value.subTitle, 0, 0, (0xff << 24) | this.textColor);
-            poseStack.popPose();
+            poseStack.popMatrix();
         }
     }
 
@@ -545,8 +640,8 @@ public class WheelWidget extends AbstractWidget {
     private void renderProgressAnimation(GuiGraphics guiGraphics, float progress) {
         progress = (float) (-Math.pow(progress, 2) + 2 * progress);
         if (progress == 0) return;
-        PoseStack poseStack = guiGraphics.pose();
-        poseStack.pushPose();
+        Matrix3x2fStack poseStack = guiGraphics.pose();
+        poseStack.pushMatrix();
         WheelWidget.renderRing(
             guiGraphics,
             this.centerPos.x,
@@ -555,7 +650,7 @@ public class WheelWidget extends AbstractWidget {
             this.ringInnerRadius * 2 * progress,
             this.ringOuterRadius * 2 * progress
         );
-        poseStack.popPose();
+        poseStack.popMatrix();
         if (this.currentSectionIndex != -1) {
             WheelSection section = this.sections.get(this.currentSectionIndex);
             Vector2f center = new Vector2f(
@@ -571,24 +666,24 @@ public class WheelWidget extends AbstractWidget {
             ).mul(this.getSectionCircleDiameter() * progress).add(this.centerPos.x, this.centerPos.y);
             float x = center.x;
             float y = center.y;
-            poseStack.pushPose();
-            poseStack.translate(x - 10, y - 10, 100);
+            poseStack.pushMatrix();
+            poseStack.translate(x - 10, y - 10);
             value.renderer().render(guiGraphics, poseStack, 20, 20);
-            poseStack.popPose();
+            poseStack.popMatrix();
             final int textAlpha = (int) (progress * 0xff) << 24;
-            poseStack.pushPose();
+            poseStack.pushMatrix();
             float coordinateScale = 0.7f;
             float offsetX = 0.1f * this.width;
             float offsetY = 0.1f * this.height;
             float adjustedX = (x - offsetX) / coordinateScale;
             float adjustedY = (y - offsetY - 20 * this.textScale) / coordinateScale;
 
-            poseStack.translate(offsetX, offsetY, 0);
-            poseStack.scale(coordinateScale, coordinateScale, coordinateScale);
-            poseStack.translate(adjustedX, adjustedY, 0);
-            poseStack.scale(this.textScale / coordinateScale, this.textScale / coordinateScale, this.textScale / coordinateScale);
+            poseStack.translate(offsetX, offsetY);
+            poseStack.scale(coordinateScale, coordinateScale);
+            poseStack.translate(adjustedX, adjustedY);
+            poseStack.scale(this.textScale / coordinateScale, this.textScale / coordinateScale);
             guiGraphics.drawCenteredString(this.minecraft.font, value.subTitle, 0, 0, textAlpha | 0xfdfdfd);
-            poseStack.popPose();
+            poseStack.popMatrix();
         }
     }
 
@@ -621,7 +716,7 @@ public class WheelWidget extends AbstractWidget {
 
     @FunctionalInterface
     public interface SectionRenderer {
-        void render(GuiGraphics graphics, PoseStack pose, int width, int height);
+        void render(GuiGraphics graphics, Matrix3x2fStack pose, int width, int height);
     }
 
     public record WheelSection(

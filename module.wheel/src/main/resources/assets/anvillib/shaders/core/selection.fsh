@@ -2,11 +2,12 @@
 
 in vec4 vertexColor;
 
-uniform vec4 ColorModulator;
-uniform vec2 FramebufferSize;
-uniform vec2 Center;
-uniform float Radius;
-uniform float AntiAliasingRadius;
+layout (std140) uniform SelectionUniform {
+    vec2 FramebufferSize;
+    vec2 Center;
+    float Radius;
+    float AntiAliasingRadius;
+};
 
 out vec4 fragColor;
 
@@ -19,5 +20,5 @@ void main() {
         color.a = smoothstep(Radius, 0.0, distance) * vertexColor.a;
     }
 
-    fragColor = color * ColorModulator;
+    fragColor = color;
 }

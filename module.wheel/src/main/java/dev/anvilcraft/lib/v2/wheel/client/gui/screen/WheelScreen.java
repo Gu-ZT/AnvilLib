@@ -48,6 +48,10 @@ public class WheelScreen extends Screen {
     }
 
     @Override
+    protected void renderBlurredBackground(GuiGraphics guiGraphics) {
+    }
+
+    @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         if (this.wheelWidget != null) {
             this.wheelWidget.render(guiGraphics, mouseX, mouseY, partialTick);

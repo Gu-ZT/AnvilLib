@@ -12,9 +12,8 @@ import org.jetbrains.annotations.Nullable;
 
 public class LibRenders {
     public static final RenderPipeline.Snippet SNIPPET_COMMON = RenderPipeline.builder()
-        .withUniform("ColorModulator", UniformType.VEC4)
-        .withUniform("ModelViewMat", UniformType.MATRIX4X4)
-        .withUniform("ProjMat", UniformType.MATRIX4X4)
+        .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
+        .withUniform("Projection", UniformType.UNIFORM_BUFFER)
         .withBlend(BlendFunction.TRANSLUCENT)
         .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
         .buildSnippet();
@@ -23,10 +22,7 @@ public class LibRenders {
         .withVertexShader("core/position_color")
         .withFragmentShader(AnvilLibWheel.of("core/ring"))
         .withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS)
-        .withUniform("Center", UniformType.VEC2)
-        .withUniform("InnerDiameter", UniformType.FLOAT)
-        .withUniform("OuterDiameter", UniformType.FLOAT)
-        .withUniform("AntiAliasingRadius", UniformType.FLOAT)
+        .withUniform("RingUniform", UniformType.UNIFORM_BUFFER)
         .build();
     public static final RenderType RING = RenderType.create(
         "anvillib_ring",
@@ -41,10 +37,7 @@ public class LibRenders {
         .withVertexShader("core/position_color")
         .withFragmentShader(AnvilLibWheel.of("core/selection"))
         .withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS)
-        .withUniform("Center", UniformType.VEC2)
-        .withUniform("FramebufferSize", UniformType.VEC2)
-        .withUniform("Radius", UniformType.FLOAT)
-        .withUniform("AntiAliasingRadius", UniformType.FLOAT)
+        .withUniform("SelectionUniform", UniformType.UNIFORM_BUFFER)
         .build();
     public static final RenderType SELECTION = RenderType.create(
         "anvillib_selection",
